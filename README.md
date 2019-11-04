@@ -32,6 +32,22 @@ A comprehensive table with pre-computed receptive field parameters for different
 end-points, input resolutions, and other variants of these networks can be found
 [here](https://github.com/google-research/receptive_field/RECEPTIVE_FIELD_TABLE.md).
 
+This library is presented in the paper
+["Computing Receptive Fields of Convolutional Neural Networks"](https://distill.pub/2019/computing-receptive-fields/),
+which was published on distill.pub, on Nov/2019. If you make use of this code,
+please consider citing as:
+
+```
+@article{araujo2019computing,
+  author = {Araujo, Andre and Norris, Wade and Sim, Jack},
+  title = {Computing Receptive Fields of Convolutional Neural Networks},
+  journal = {Distill},
+  year = {2019},
+  note = {https://distill.pub/2019/computing-receptive-fields},
+  doi = {10.23915/distill.00021}
+}
+```
+
 ## Installation
 
 ```bash
@@ -110,7 +126,10 @@ the feature at position `[0, 2]` at the output of the layer
 `'InceptionResnetV2/Conv2d_7b_1x1/Relu'` is centered in the original image in
 the position `[37, 101]`.
 
-TODO: include link to derivations and definitions of different parameters.
+See [our paper](https://distill.pub/2019/computing-receptive-fields/) for a
+detailed discussion on receptive field computation, definitions of the different
+parameters, and how to find the exact input image region that computed a
+feature.
 
 ## Receptive field benchmark
 

@@ -30,7 +30,7 @@ resnet_v1_200       | 1763                 | 32                    | 879        
 
 A comprehensive table with pre-computed receptive field parameters for different
 end-points, input resolutions, and other variants of these networks can be found
-[here](https://github.com/google-research/receptive_field/RECEPTIVE_FIELD_TABLE.md).
+[here](https://github.com/google-research/receptive_field/blob/master/receptive_field/RECEPTIVE_FIELD_TABLE.md).
 
 This library is presented in the paper
 ["Computing Receptive Fields of Convolutional Neural Networks"](https://distill.pub/2019/computing-receptive-fields/),
@@ -152,7 +152,7 @@ are also written to the file `/tmp/rf_benchmark_results.csv`.
 
 A comprehensive table with pre-computed receptive field parameters for different
 networks can be found
-[here](https://github.com/google-research/receptive_field/RECEPTIVE_FIELD_TABLE.md).
+[here](https://github.com/google-research/receptive_field/blob/master/receptive_field/RECEPTIVE_FIELD_TABLE.md).
 
 ## Compute RF parameters from a graph pbtxt
 

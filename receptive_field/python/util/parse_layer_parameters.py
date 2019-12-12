@@ -27,8 +27,8 @@ import tensorflow as tf
 _UNCHANGED_RF_LAYER_OPS = [
     "Add", "AddV2", "BiasAdd", "Cast", "Ceil", "ConcatV2", "Const", "Floor",
     "FusedBatchNorm", "FusedBatchNormV3", "Identity", "Log", "Mul", "Pow",
-    "RealDiv", "Relu", "Relu6", "Round", "Rsqrt", "Softplus", "Sub",
-    "VariableV2", "LRN", "GreaterEqual"
+    "ReadVariableOp", "RealDiv", "Relu", "Relu6", "Round", "Rsqrt", "Softplus",
+    "Sub", "VarHandleOp", "VariableV2", "LRN", "GreaterEqual"
 ]
 
 # Different ways in which padding modes may be spelled.
@@ -61,14 +61,14 @@ def _stride_size(node, name_to_node):
     stride_x = t[2]
   else:
     strides_attr = node.attr["strides"]
-    tf.logging.vlog(4, "strides_attr = %s", strides_attr)
+    tf.compat.v1.logging.vlog(4, "strides_attr = %s", strides_attr)
     stride_y = strides_attr.list.i[1]
     stride_x = strides_attr.list.i[2]
   return stride_x, stride_y
 
 
 def _conv_kernel_size(node, name_to_node):
-  """Computes kernel size given a TF convolution or pooling node.
+  """Computes kernel size given a TF convolution node.
 
   Args:
     node: Tensorflow node (NodeDef proto).
@@ -83,24 +83,28 @@ def _conv_kernel_size(node, name_to_node):
     ValueError: If the weight layer node is misconfigured.
   """
   weights_layer_read_name = node.input[1]
-  if not weights_layer_read_name.endswith("/read"):
+  if weights_layer_read_name.endswith("/read"):
+    weights_layer_param_name = weights_layer_read_name[:-5]
+  elif weights_layer_read_name.endswith("/Conv2D/ReadVariableOp"):
+    weights_layer_param_name = weights_layer_read_name[:-22] + "/kernel"
+  else:
     raise ValueError(
-        "Weight layer's name input to conv layer does not end with '/read'")
-  weights_layer_param_name = weights_layer_read_name[:-5]
+        "Weight layer's name input to conv layer does not end with '/read' or "
+        "'/Conv2D/ReadVariableOp': %s" % weights_layer_read_name)
   weights_node = name_to_node[weights_layer_param_name]
-  if weights_node.op == "VariableV2":
+  if weights_node.op == "VariableV2" or weights_node.op == "VarHandleOp":
     shape_dim = weights_node.attr["shape"].shape.dim
   elif weights_node.op == "Const":
     shape_dim = weights_node.attr["value"].tensor.tensor_shape.dim
   else:
     raise ValueError(
-        "Weight layer {} is not of type VariableV2 or Const: {}".format(
-            weights_layer_param_name, weights_node.op))
+        "Weight layer {} is not of type VariableV2, VarHandleOp or Const: {}"
+        .format(weights_layer_param_name, weights_node.op))
   if len(shape_dim) != 4:
     raise ValueError(
         "Weight layer {} does not have rank 4. Instead, it has: {}".format(
             weights_layer_param_name, len(shape_dim)))
-  tf.logging.vlog(4, "weight shape = %s", shape_dim)
+  tf.compat.v1.logging.vlog(4, "weight shape = %s", shape_dim)
   kernel_size_y = shape_dim[0].size
   kernel_size_x = shape_dim[1].size
 
@@ -127,7 +131,7 @@ def _padding_size_conv_pool(node, kernel_size, stride, input_resolution=None):
   # The padding depends on kernel size, and may depend on input size. If it
   # depends on input size and input_resolution is None, we raise an exception.
   padding_attr = node.attr["padding"]
-  tf.logging.vlog(4, "padding_attr = %s", padding_attr)
+  tf.compat.v1.logging.vlog(4, "padding_attr = %s", padding_attr)
   if padding_attr.s in _VALID_PADDING:
     total_padding = 0
     padding = 0
@@ -149,7 +153,7 @@ def _padding_size_conv_pool(node, kernel_size, stride, input_resolution=None):
       else:
         total_padding = None
         padding = None
-        tf.logging.warning(
+        tf.compat.v1.logging.warning(
             "Padding depends on input size, which means that the effective "
             "padding may be different depending on the input image "
             "dimensionality. In this case, alignment check will be skipped. If"
@@ -279,9 +283,9 @@ def get_layer_params(node, name_to_node, input_resolution=None, force=False):
   Raises:
     ValueError: If layer op is unknown and force is False.
   """
-  tf.logging.vlog(3, "node.name = %s", node.name)
-  tf.logging.vlog(3, "node.op = %s", node.op)
-  tf.logging.vlog(4, "node = %s", node)
+  tf.compat.v1.logging.vlog(3, "node.name = %s", node.name)
+  tf.compat.v1.logging.vlog(3, "node.op = %s", node.op)
+  tf.compat.v1.logging.vlog(4, "node = %s", node)
   if node.op == "Conv2D" or node.op == "DepthwiseConv2dNative":
     stride_x, stride_y = _stride_size(node, name_to_node)
     kernel_size_x, kernel_size_y = _conv_kernel_size(node, name_to_node)

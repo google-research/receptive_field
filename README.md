@@ -80,6 +80,10 @@ rf_x, rf_y, eff_stride_x, eff_stride_y, eff_pad_x, eff_pad_y = \
     g.as_graph_def(), 'input_image', 'my_output_endpoint')
 ```
 
+Note that Keras models are also supported, just construct them within the graph
+as the above example, and it should just work. Refer to our tests for detailed
+usage examples.
+
 Here's a simple example of computing the receptive field parameters for
 Inception-Resnet-v2. To get this to work, be sure to checkout
 [tensorflow/models](https://github.com/tensorflow/models), so that the Inception
@@ -224,6 +228,10 @@ This package was previously part of Tensorflow, as `tf.contrib.receptive_field`
 [here](https://github.com/tensorflow/tensorflow/tree/r1.15/tensorflow/contrib/receptive_field)).
 With Tensorflow's new 2.0 version, contrib modules were deprecated -- so we
 moved `receptive_field` to this standalone repository.
+
+### 1.1: December, 2019
+
+Included support for Keras-based models.
 
 ### 1.0: October, 2019
 

@@ -26,24 +26,23 @@ import tensorflow as tf
 import tf_slim as slim
 
 
-def create_test_network(placeholder_resolution, convert_variables_to_constants):
+def create_test_network(image_resolution, convert_variables_to_constants):
   """Convolutional neural network for test.
 
   Args:
-    placeholder_resolution: Resolution to use for input placeholder. Used for
-      height and width dimensions.
+    image_resolution: Resolution to use for input placeholder. Used for height
+      and width dimensions.
     convert_variables_to_constants: Whether to convert variables to constants.
 
   Returns:
-    name_to_node: Dict keyed by node name, each entry containing the node's
-      NodeDef.
+    graph_def: GraphDef proto of the model.
   """
   g = tf.Graph()
   sess = tf.Session(graph=g)
   with g.as_default():
     # An input test image with unknown spatial resolution.
     x = tf.placeholder(
-        tf.float32, (1, placeholder_resolution, placeholder_resolution, 1),
+        tf.float32, (1, image_resolution, image_resolution, 1),
         name='input_image')
     # Left branch before first addition.
     l1 = slim.conv2d(x, 1, [1, 1], stride=4, scope='L1', padding='VALID')
@@ -67,21 +66,82 @@ def create_test_network(placeholder_resolution, convert_variables_to_constants):
     else:
       graph_def = g.as_graph_def()
 
-  name_to_node = graph_compute_order.parse_graph_nodes(graph_def)
-  return name_to_node
+  return graph_def
+
+
+def create_test_network_keras(image_resolution, convert_variables_to_constants):
+  """Convolutional neural network for test, using Keras.
+
+  It is exactly the same network as for the "create_test_network" function.
+
+  Args:
+    image_resolution: Resolution to use for input image. Used for height and
+      width dimensions.
+    convert_variables_to_constants: Whether to convert variables to constants.
+
+  Returns:
+    graph_def: GraphDef proto of the model.
+  """
+  g = tf.Graph()
+  sess = tf.Session(graph=g)
+  with g.as_default():
+    x = tf.keras.Input([image_resolution, image_resolution, 1],
+                       name='input_image')
+    l1 = tf.keras.layers.Conv2D(
+        filters=1, kernel_size=1, strides=4, padding='valid', name='L1')(
+            x)
+    l2_pad = tf.keras.layers.ZeroPadding2D(
+        padding=[[1, 0], [1, 0]], name='L2_pad')(
+            x)
+    l2 = tf.keras.layers.Conv2D(
+        filters=1, kernel_size=3, strides=2, padding='valid', name='L2')(
+            l2_pad)
+    l3 = tf.keras.layers.MaxPool2D(
+        pool_size=3, strides=2, name='L3', padding='same')(
+            l2)
+    l4 = tf.keras.layers.ReLU(name='L4_relu')(l1 + l3)
+    l5 = tf.keras.layers.Conv2D(
+        filters=1, kernel_size=1, strides=2, padding='same', name='L5')(
+            l4)
+    l6 = tf.keras.layers.Conv2D(
+        filters=1, kernel_size=3, strides=2, padding='same', name='L6')(
+            l4)
+    l7 = tf.keras.layers.Add(name='L7_add')([l5, l6])
+    tf.keras.models.Model(x, l7)
+
+    if convert_variables_to_constants:
+      sess.run(tf.global_variables_initializer())
+      graph_def = tf.graph_util.convert_variables_to_constants(
+          sess, g.as_graph_def(), ['L7_add/add'])
+    else:
+      graph_def = g.as_graph_def()
+
+  return graph_def
 
 
 class ParseLayerParametersTest(tf.test.TestCase, parameterized.TestCase):
 
-  @parameterized.named_parameters(('NonePlaceholder', None, False),
-                                  ('224Placeholder', 224, False),
-                                  ('NonePlaceholderVarAsConst', None, True),
-                                  ('224PlaceholderVarAsConst', 224, True))
-  def testParametersAreParsedCorrectly(self, placeholder_resolution,
-                                       convert_variables_to_constants):
+  @parameterized.named_parameters(
+      ('NoneResolution', None, False, False),
+      ('224Resolution', 224, False, False),
+      ('NoneResolutionVarAsConst', None, True, False),
+      ('224ResolutionVarAsConst', 224, True, False),
+      ('KerasNoneResolution', None, False, True),
+      ('Keras224Resolution', 224, False, True),
+      ('KerasNoneResolutionVarAsConst', None, True, True),
+      ('Keras224ResolutionVarAsConst', 224, True, True))
+  def testParametersAreParsedCorrectly(self, image_resolution,
+                                       convert_variables_to_constants,
+                                       use_keras_network):
     """Checks parameters from create_test_network() are parsed correctly."""
-    name_to_node = create_test_network(placeholder_resolution,
-                                       convert_variables_to_constants)
+    if use_keras_network:
+      graph_def = create_test_network_keras(image_resolution,
+                                            convert_variables_to_constants)
+    else:
+      graph_def = create_test_network(image_resolution,
+                                      convert_variables_to_constants)
+
+    name_to_node = graph_compute_order.parse_graph_nodes(graph_def)
 
     # L1.
     l1_node_name = 'L1/Conv2D'
@@ -92,6 +152,8 @@ class ParseLayerParametersTest(tf.test.TestCase, parameterized.TestCase):
 
     # L2 padding.
     l2_pad_name = 'L2_pad'
+    if use_keras_network:
+      l2_pad_name += '/Pad'
     l2_pad_params = parse_layer_parameters.get_layer_params(
         name_to_node[l2_pad_name], name_to_node)
     expected_l2_pad_params = (1, 1, 1, 1, 1, 1, 1, 1)
@@ -124,6 +186,8 @@ class ParseLayerParametersTest(tf.test.TestCase, parameterized.TestCase):
 
     # L4.
     l4_node_name = 'L4_relu'
+    if use_keras_network:
+      l4_node_name += '/Relu'
     l4_params = parse_layer_parameters.get_layer_params(
         name_to_node[l4_node_name], name_to_node)
     expected_l4_params = (1, 1, 1, 1, 0, 0, 0, 0)
@@ -156,6 +220,8 @@ class ParseLayerParametersTest(tf.test.TestCase, parameterized.TestCase):
 
     # L7.
     l7_node_name = 'L7_add'
+    if use_keras_network:
+      l7_node_name += '/add'
     l7_params = parse_layer_parameters.get_layer_params(
         name_to_node[l7_node_name], name_to_node)
     expected_l7_params = (1, 1, 1, 1, 0, 0, 0, 0)

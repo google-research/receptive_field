@@ -54,12 +54,18 @@ def main(unused_argv):
    effective_padding_y) = rf.compute_receptive_field_from_graph_def(
        graph_def, cmd_args.input_node, cmd_args.output_node)
 
-  tf.logging.info('Receptive field size (horizontal) = %s', receptive_field_x)
-  tf.logging.info('Receptive field size (vertical) = %s', receptive_field_y)
-  tf.logging.info('Effective stride (horizontal) = %s', effective_stride_x)
-  tf.logging.info('Effective stride (vertical) = %s', effective_stride_y)
-  tf.logging.info('Effective padding (horizontal) = %s', effective_padding_x)
-  tf.logging.info('Effective padding (vertical) = %s', effective_padding_y)
+  tf.compat.v1.logging.info('Receptive field size (horizontal) = %s',
+                            receptive_field_x)
+  tf.compat.v1.logging.info('Receptive field size (vertical) = %s',
+                            receptive_field_y)
+  tf.compat.v1.logging.info('Effective stride (horizontal) = %s',
+                            effective_stride_x)
+  tf.compat.v1.logging.info('Effective stride (vertical) = %s',
+                            effective_stride_y)
+  tf.compat.v1.logging.info('Effective padding (horizontal) = %s',
+                            effective_padding_x)
+  tf.compat.v1.logging.info('Effective padding (vertical) = %s',
+                            effective_padding_y)
 
   f = tf.gfile.GFile('%s' % cmd_args.output_path, 'w')
   f.write('Receptive field size (horizontal) = %s\n' % receptive_field_x)

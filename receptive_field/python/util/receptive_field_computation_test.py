@@ -19,6 +19,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from absl.testing import parameterized
 import numpy as np
 import receptive_field as rf
 import tensorflow as tf
@@ -229,6 +230,43 @@ def create_test_network_8():
   return g
 
 
+def create_test_network_8_keras():
+  """Aligned network for test, including an intermediate addition, using Keras.
+
+  It is exactly the same network as for the "create_test_network_8" function.
+
+  Returns:
+    g: Tensorflow graph object (Graph proto).
+  """
+  g = tf.Graph()
+  with g.as_default():
+    x = tf.keras.Input([None, None, 1], name='input_image')
+    l1 = tf.keras.layers.Conv2D(
+        filters=1, kernel_size=1, strides=4, padding='valid', name='L1')(
+            x)
+    l2_pad = tf.keras.layers.ZeroPadding2D(
+        padding=[[1, 0], [1, 0]], name='L2_pad')(
+            x)
+    l2 = tf.keras.layers.Conv2D(
+        filters=1, kernel_size=3, strides=2, padding='valid', name='L2')(
+            l2_pad)
+    l3 = tf.keras.layers.Conv2D(
+        filters=1, kernel_size=1, strides=2, name='L3', padding='same')(
+            l2)
+    l4 = tf.keras.layers.ReLU(name='L4_relu')(l1 + l3)
+    l5 = tf.keras.layers.Conv2D(
+        filters=1, kernel_size=1, strides=2, padding='valid', name='L5')(
+            l4)
+    l6_pad = tf.keras.layers.ZeroPadding2D(padding=[[1, 0], [1, 0]])(l4)
+    l6 = tf.keras.layers.Conv2D(
+        filters=1, kernel_size=3, strides=2, padding='valid', name='L6')(
+            l6_pad)
+    l7 = tf.keras.layers.ReLU(name='output')(l5 + l6)
+    tf.keras.models.Model(x, l7)
+
+  return g
+
+
 def create_test_network_9():
   """Aligned network for test, including an intermediate addition.
 
@@ -259,7 +297,7 @@ def create_test_network_9():
   return g
 
 
-class ReceptiveFieldTest(tf.test.TestCase):
+class ReceptiveFieldTest(tf.test.TestCase, parameterized.TestCase):
 
   def testComputeRFFromGraphDefAligned(self):
     graph_def = create_test_network_1().as_graph_def()
@@ -398,10 +436,16 @@ class ReceptiveFieldTest(tf.test.TestCase):
     self.assertEqual(effective_padding_x, 1)
     self.assertEqual(effective_padding_y, 1)
 
-  def testComputeRFFromGraphDefWithIntermediateAddNode(self):
-    graph_def = create_test_network_8().as_graph_def()
+  @parameterized.named_parameters(('', False), ('UsingKeras', True))
+  def testComputeRFFromGraphDefWithIntermediateAddNode(self, use_keras_network):
     input_node = 'input_image'
     output_node = 'output'
+    if use_keras_network:
+      graph_def = create_test_network_8_keras().as_graph_def()
+      output_node += '/Relu'
+    else:
+      graph_def = create_test_network_8().as_graph_def()
+
     (receptive_field_x, receptive_field_y, effective_stride_x,
      effective_stride_y, effective_padding_x, effective_padding_y) = (
          rf.compute_receptive_field_from_graph_def(graph_def, input_node,

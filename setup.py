@@ -41,7 +41,7 @@ library_description = (
 
 setup(
     name='receptive_field',
-    version='1.0',
+    version='1.1',
     include_package_data=True,
     packages=find_packages(exclude=['docs']),  # Required
     install_requires=install_requires,

@@ -22,7 +22,7 @@ from __future__ import print_function
 from absl.testing import parameterized
 import numpy as np
 import receptive_field as rf
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 import tf_slim as slim
 
 

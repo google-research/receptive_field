@@ -22,7 +22,7 @@ from __future__ import print_function
 from absl.testing import parameterized
 from receptive_field.python.util import graph_compute_order
 from receptive_field.python.util import parse_layer_parameters
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 import tf_slim as slim
 
 

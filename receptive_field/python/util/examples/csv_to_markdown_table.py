@@ -40,7 +40,7 @@ import argparse
 import csv
 import sys
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 cmd_args = None
 

@@ -22,7 +22,7 @@ from __future__ import print_function
 import numpy as np
 from receptive_field.python.util import graph_compute_order
 from receptive_field.python.util import parse_layer_parameters
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 
 def _get_rf_size_node_input(stride, kernel_size, rf_size_output):

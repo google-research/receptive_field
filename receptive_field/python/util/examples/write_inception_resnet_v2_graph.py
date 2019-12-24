@@ -22,6 +22,7 @@ from __future__ import print_function
 import argparse
 import sys
 
+from absl import app
 import tensorflow.compat.v1 as tf
 
 from nets import inception
@@ -55,4 +56,4 @@ if __name__ == '__main__':
       default='graph.pbtxt',
       help='Filename of graph that will be saved.')
   cmd_args, unparsed = parser.parse_known_args()
-  tf.compat.v1.app.run(main=main, argv=[sys.argv[0]] + unparsed)
+  app.run(main=main, argv=[sys.argv[0]] + unparsed)

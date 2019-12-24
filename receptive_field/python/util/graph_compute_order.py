@@ -21,8 +21,9 @@ from __future__ import print_function
 
 import collections
 import math
+
+from absl import logging
 from receptive_field.python.util import parse_layer_parameters
-import tensorflow.compat.v1 as tf
 
 
 def parse_graph_nodes(graph_def):
@@ -135,7 +136,7 @@ def _get_computed_nodes(name_to_node,
     number_inputs += 1
 
   # Figure out output size for this layer.
-  tf.compat.v1.logging.vlog(3, 'input_size = %s', input_size)
+  logging.vlog(3, 'input_size = %s', input_size)
   if input_size is None:
     output_size = None
   else:
@@ -143,7 +144,7 @@ def _get_computed_nodes(name_to_node,
      total_padding_y) = (
          parse_layer_parameters.get_layer_params(
              node_def, name_to_node, input_size, force=True))
-    tf.compat.v1.logging.vlog(
+    logging.vlog(
         3, 'kernel_size_x = %s, kernel_size_y = %s, '
         'stride_x = %s, stride_y = %s, '
         'total_padding_x = %s, total_padding_y = %s' %
@@ -155,7 +156,7 @@ def _get_computed_nodes(name_to_node,
     output_size[1] = _compute_output_resolution(input_size[1], kernel_size_y,
                                                 stride_y, total_padding_y)
 
-  tf.compat.v1.logging.vlog(3, 'output_size = %s', output_size)
+  logging.vlog(3, 'output_size = %s', output_size)
   node_info[current] = _node_info(order, node_def, input_size, output_size)
 
   return order, input_size, output_size

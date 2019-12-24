@@ -19,10 +19,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from absl import logging
 import numpy as np
 from receptive_field.python.util import graph_compute_order
 from receptive_field.python.util import parse_layer_parameters
-import tensorflow.compat.v1 as tf
+import tensorflow as tf
 
 
 def _get_rf_size_node_input(stride, kernel_size, rf_size_output):
@@ -244,8 +245,7 @@ def compute_receptive_field_from_graph_def(graph_def,
 
   for _, (o, node, _, _) in ordered_node_info:
     if node:
-      tf.compat.v1.logging.vlog(
-          3, "%10d %-100s %-20s" % (o, node.name[:90], node.op))
+      logging.vlog(3, "%10d %-100s %-20s" % (o, node.name[:90], node.op))
     else:
       continue
 
@@ -265,15 +265,14 @@ def compute_receptive_field_from_graph_def(graph_def,
                                              "not in rf_sizes_x" % node.name)
         # In this case, node is not relevant since it's not part of the
         # computation we're interested in.
-        tf.compat.v1.logging.vlog(3, "Irrelevant node %s, skipping it...",
-                                  node.name)
+        logging.vlog(3, "Irrelevant node %s, skipping it...", node.name)
         continue
 
       # Get params for this layer.
       (kernel_size_x, kernel_size_y, stride_x, stride_y, padding_x, padding_y,
        _, _) = parse_layer_parameters.get_layer_params(
            node, name_to_node, node_info[node.name].input_size)
-      tf.compat.v1.logging.vlog(
+      logging.vlog(
           3, "kernel_size_x = %s, kernel_size_y = %s, "
           "stride_x = %s, stride_y = %s, "
           "padding_x = %s, padding_y = %s, input size = %s" %
@@ -300,7 +299,7 @@ def compute_receptive_field_from_graph_def(graph_def,
       else:
         effective_padding_input_x = None
         effective_padding_input_y = None
-      tf.compat.v1.logging.vlog(
+      logging.vlog(
           4, "rf_size_input_x = %s, rf_size_input_y = %s, "
           "effective_stride_input_x = %s, effective_stride_input_y = %s, "
           "effective_padding_input_x = %s, effective_padding_input_y = %s" %
@@ -312,22 +311,21 @@ def compute_receptive_field_from_graph_def(graph_def,
       for inp_name in node.input:
         # Stop the propagation of the receptive field.
         if any(inp_name.startswith(stop) for stop in stop_propagation):
-          tf.compat.v1.logging.vlog(3, "Skipping explicitly ignored node %s.",
-                                    inp_name)
+          logging.vlog(3, "Skipping explicitly ignored node %s.", inp_name)
           continue
 
-        tf.compat.v1.logging.vlog(4, "inp_name = %s", inp_name)
+        logging.vlog(4, "inp_name = %s", inp_name)
         if inp_name.startswith("^"):
           # The character "^" denotes a control dependency, so this input node
           # can be safely ignored.
           continue
 
         inp_node = name_to_node[inp_name]
-        tf.compat.v1.logging.vlog(4, "inp_node = \n%s", inp_node)
+        logging.vlog(4, "inp_node = \n%s", inp_node)
         if inp_name in rf_sizes_x:
           assert inp_name in rf_sizes_y, ("Node %s is in rf_sizes_x, but "
                                           "not in rf_sizes_y" % inp_name)
-          tf.compat.v1.logging.vlog(
+          logging.vlog(
               4, "rf_sizes_x[inp_name] = %s,"
               " rf_sizes_y[inp_name] = %s, "
               "effective_strides_x[inp_name] = %s,"

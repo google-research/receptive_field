@@ -22,8 +22,10 @@ from __future__ import print_function
 import argparse
 import sys
 
+from absl import app
+from absl import logging
 import receptive_field as rf
-import tensorflow.compat.v1 as tf
+import tensorflow as tf
 
 from google.protobuf import text_format
 
@@ -54,18 +56,12 @@ def main(unused_argv):
    effective_padding_y) = rf.compute_receptive_field_from_graph_def(
        graph_def, cmd_args.input_node, cmd_args.output_node)
 
-  tf.compat.v1.logging.info('Receptive field size (horizontal) = %s',
-                            receptive_field_x)
-  tf.compat.v1.logging.info('Receptive field size (vertical) = %s',
-                            receptive_field_y)
-  tf.compat.v1.logging.info('Effective stride (horizontal) = %s',
-                            effective_stride_x)
-  tf.compat.v1.logging.info('Effective stride (vertical) = %s',
-                            effective_stride_y)
-  tf.compat.v1.logging.info('Effective padding (horizontal) = %s',
-                            effective_padding_x)
-  tf.compat.v1.logging.info('Effective padding (vertical) = %s',
-                            effective_padding_y)
+  logging.info('Receptive field size (horizontal) = %s', receptive_field_x)
+  logging.info('Receptive field size (vertical) = %s', receptive_field_y)
+  logging.info('Effective stride (horizontal) = %s', effective_stride_x)
+  logging.info('Effective stride (vertical) = %s', effective_stride_y)
+  logging.info('Effective padding (horizontal) = %s', effective_padding_x)
+  logging.info('Effective padding (vertical) = %s', effective_padding_y)
 
   f = tf.gfile.GFile('%s' % cmd_args.output_path, 'w')
   f.write('Receptive field size (horizontal) = %s\n' % receptive_field_x)
@@ -92,4 +88,4 @@ if __name__ == '__main__':
   parser.add_argument(
       '--output_node', type=str, default='', help='Name of output node.')
   cmd_args, unparsed = parser.parse_known_args()
-  tf.compat.v1.app.run(main=main, argv=[sys.argv[0]] + unparsed)
+  app.run(main=main, argv=[sys.argv[0]] + unparsed)

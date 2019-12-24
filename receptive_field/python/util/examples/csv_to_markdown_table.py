@@ -40,7 +40,7 @@ import argparse
 import csv
 import sys
 
-import tensorflow.compat.v1 as tf
+from absl import app
 
 cmd_args = None
 
@@ -80,4 +80,4 @@ if __name__ == '__main__':
       default='/tmp/rf.md',
       help='Path where Markdown output will be saved.')
   cmd_args, unparsed = parser.parse_known_args()
-  tf.compat.v1.app.run(main=main, argv=[sys.argv[0]] + unparsed)
+  app.run(main=main, argv=[sys.argv[0]] + unparsed)

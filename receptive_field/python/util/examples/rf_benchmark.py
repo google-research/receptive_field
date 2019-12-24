@@ -27,6 +27,7 @@ import argparse
 import csv
 import sys
 
+from absl import app
 import receptive_field as rf
 import tensorflow as tf
 import tf_slim as slim
@@ -573,4 +574,4 @@ if __name__ == '__main__':
       file will be written.\
       """)
   cmd_args, unparsed = parser.parse_known_args()
-  tf.compat.v1.app.run(main=main, argv=[sys.argv[0]] + unparsed)
+  app.run(main=main, argv=[sys.argv[0]] + unparsed)

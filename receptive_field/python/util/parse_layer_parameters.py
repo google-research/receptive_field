@@ -30,7 +30,7 @@ _UNCHANGED_RF_LAYER_OPS = [
     "Add", "AddV2", "BiasAdd", "Cast", "Ceil", "ConcatV2", "Const", "Floor",
     "FusedBatchNorm", "FusedBatchNormV3", "Identity", "Log", "Mul", "Pow",
     "ReadVariableOp", "RealDiv", "Relu", "Relu6", "Round", "Rsqrt", "Softplus",
-    "Sub", "VarHandleOp", "VariableV2", "LRN", "GreaterEqual", "If"
+    "Sub", "VarHandleOp", "VariableV2", "LRN", "GreaterEqual", "If", "PlaceholderWithDefault"
 ]
 
 # Different ways in which padding modes may be spelled.

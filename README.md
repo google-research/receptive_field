@@ -57,16 +57,21 @@ pip install .
 
 ## Basic usage
 
+**NEW**: See
+[this notebook](https://github.com/google-research/receptive_field/blob/master/RF_Keras_Applications.ipynb)
+for a pointer on how to compute receptive fields for Keras Applications models,
+using TF2!
+
 The main function to be called is `compute_receptive_field_from_graph_def`,
 which will return the receptive field, effective stride and effective padding
 for both horizontal and vertical directions.
 
 For example, if your model is constructed using the function
-`my_model_construction()`, you can use the library as follows:
+`my_model_construction()`, you can use the library with TF1 graphs as follows:
 
 ```python
 import receptive_field as rf
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 # Construct graph.
 g = tf.Graph()
@@ -81,10 +86,12 @@ rf_x, rf_y, eff_stride_x, eff_stride_y, eff_pad_x, eff_pad_y = \
 ```
 
 Note that Keras models are also supported, just construct them within the graph
-as the above example, and it should just work. Refer to our tests for detailed
-usage examples.
+as the above example, and it should just work. Or, is using Keras Applications
+models, see
+[this notebook](https://github.com/google-research/receptive_field/blob/master/RF_Keras_Applications.ipynb).
+Please refer also to our tests for other detailed usage examples.
 
-Here's a simple example of computing the receptive field parameters for
+Next, we show a simple example of computing the receptive field parameters for
 Inception-Resnet-v2. To get this to work, be sure to checkout
 [tensorflow/models](https://github.com/tensorflow/models), so that the Inception
 models are available to you. This can be done in three simple commands:
@@ -100,7 +107,7 @@ You can then compute the receptive field parameters for Inception-Resnet-v2 as:
 ```python
 from nets import inception
 import receptive_field as rf
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 # Construct graph.
 g = tf.Graph()

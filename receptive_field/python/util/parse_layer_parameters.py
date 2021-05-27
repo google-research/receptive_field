@@ -89,6 +89,8 @@ def _conv_kernel_size(node, name_to_node):
     weights_layer_param_name = weights_layer_read_name[:-5]
   elif weights_layer_read_name.endswith("/Conv2D/ReadVariableOp"):
     weights_layer_param_name = weights_layer_read_name[:-22] + "/kernel"
+  elif weights_layer_read_name.endswith("/depthwise/ReadVariableOp"):
+    weights_layer_param_name = weights_layer_read_name[:-25] + "/depthwise_kernel"
   else:
     raise ValueError(
         "Weight layer's name input to conv layer does not end with '/read' or "
